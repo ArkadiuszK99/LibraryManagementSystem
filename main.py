@@ -1,28 +1,24 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5 import QtWidgets, QtGui, QtCore, uic
+__all__ = [QtWidgets, QtGui, QtCore, uic]
 import sys
 import MySQLdb
-from PyQt5.uic import loadUiType
 
-ui,_ = loadUiType('UI.ui')
-
-
-class MainApp(QMainWindow, ui):
+class Ui(QtWidgets.QMainWindow):
     def __init__(self):
-        QMainWindow.__init__(self)
-        self.setupUi(self)
+        super(Ui, self).__init__()
+        uic.loadUi('UI.ui', self)
         self.buttons()
+        self.show()
 
     def buttons(self):
         self.usersTabButton.clicked.connect(self.openUsersTab)
         self.booksTabButton.clicked.connect(self.openBooksTab)
-        self.AddBookB.clicked.connect(self.test)
+        self.AddBookB.clicked.connect(self.addBook)
         self.DelBookB.clicked.connect(self.test)
         self.DelBookSB.clicked.connect(self.test)
 
     def test(self):
-        print("działa")
+        print("works")
     ### tabs
     def openUsersTab(self):
         self.tabWidget.setCurrentIndex(1)
@@ -30,14 +26,22 @@ class MainApp(QMainWindow, ui):
     def openBooksTab(self):
         self.tabWidget.setCurrentIndex(2)
 
-     ### books
+    ### books
     def addBook(self):
-        self.db = MySQLdb.connect(host='localhost' , user='root' , password ='arek', db='library')
+        self.db = MySQLdb.connect(host='localhost', user='arek', password ='', db='library')
         self.cur = self.db.cursor()
-
         book_title = self.AddBookTitle.text()
         book_author = self.AddBookAuthor.text()
         status = "available"
+        self.cur.execute('''
+                    INSERT INTO books(book_title,book_author,status) VALUES (%s , %s , %s)
+                ''', (book_title, book_author, status))
+        self.db.commit()
+        print('New Book Added')
+        self.AddBookTitle.setText('')
+        self.AddBookAuthor.setText('')
+        self.statusBar().showMessage('New Book Added')
+
     def searchBook(self):
         pass
 
@@ -45,9 +49,8 @@ class MainApp(QMainWindow, ui):
         pass
 
 def main():
-    app = QApplication(sys.argv)
-    window = MainApp()
-    window.show()
+    app = QtWidgets.QApplication(sys.argv)
+    window = Ui()
     app.exec_()
 
 if __name__ == '__main__':
